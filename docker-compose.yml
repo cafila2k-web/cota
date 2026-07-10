@@ -1,0 +1,50 @@
+# docker-compose.yml
+# Orquestração local do ecossistema COTA ERP
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: cota-db-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: cota_admin
+      POSTGRES_PASSWORD: cota_secure_pass_2026
+      POSTGRES_DB: cota_erp_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: cota-cache-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cota-backend-nestjs
+    restart: always
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: "postgresql://cota_admin:cota_secure_pass_2026@postgres:5432/cota_erp_db?schema=public"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: "cota_super_secret_jwt_key_angola_2026"
+      JWT_REFRESH_SECRET: "cota_super_secret_refresh_jwt_key_2026"
+      OPENROUTE_SERVICE_API_KEY: "SUA_API_KEY_AQUI"
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  postgres_data:
+  redis_data:

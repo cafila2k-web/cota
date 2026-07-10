@@ -1,0 +1,252 @@
+// database/schema.prisma
+// COTA - Cooperativa de Gestão de Táxis JK
+// Prisma Schema for PostgreSQL ERP database
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum PerfilUsuario {
+  ADMINISTRADOR
+  OPERADOR
+  MOTORISTA
+  PROPRIETARIO
+  CLIENTE
+}
+
+enum EstadoMotorista {
+  ATIVO
+  INATIVO
+  EM_SERVICO
+  BLOQUEADO
+}
+
+enum EstadoViatura {
+  ATIVO
+  MANUTENCAO
+  INATIVO
+  PARQUEADO
+}
+
+enum StatusCorrida {
+  SOLICITADA
+  ATRIBUIDA
+  A_CAMINHO
+  EM_CURSO
+  CONCLUIDA
+  CANCELADA
+}
+
+enum StatusManutencao {
+  AGENDADA
+  EM_CURSO
+  CONCLUIDA
+  CANCELADA
+}
+
+enum TipoDocumento {
+  BI              // Bilhete de Identidade
+  NIF             // Número de Identificação Fiscal
+  CARTA_CONDUCAO  // Carta de Condução
+  SEGURO          // Apólice de Seguro
+  LICENCIAMENTO   // Licença de Circulação
+  INSPECCAO       // Certificado de Inspecção
+}
+
+enum TipoTransacao {
+  RECEITA
+  DESPESA
+}
+
+model Usuario {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  senha         String
+  nome          String
+  nif           String?       @unique
+  telefone      String?
+  perfil        PerfilUsuario @default(CLIENTE)
+  ativo         Boolean       @default(true)
+  dataCriacao   DateTime      @default(now())
+  dataAtualizao DateTime      @updatedAt
+
+  // Relacionamentos específicos baseados no perfil
+  motorista     Motorista?
+  proprietario  Proprietario?
+  corridasCli   Corrida[]     @relation("ClienteCorridas")
+}
+
+model Proprietario {
+  id            String         @id @default(uuid())
+  usuarioId     String         @unique
+  usuario       Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  morada        String?
+  nifEmpresa    String?        @unique
+  dataCadastro  DateTime       @default(now())
+  
+  viaturas      Viatura[]
+  documentos    Documento[]
+  financeiro    Financeiro[]
+}
+
+model Motorista {
+  id              String           @id @default(uuid())
+  usuarioId       String           @unique
+  usuario         Usuario          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  numeroCarta     String           @unique
+  validadeCarta   DateTime
+  nif             String           @unique
+  bi              String           @unique
+  estado          EstadoMotorista  @default(ATIVO)
+  pontuacaoMedia  Float            @default(5.0)
+  dataAdmissao    DateTime         @default(now())
+
+  viaturas        Viatura[]        @relation("MotoristaViatura")
+  escalas         Escala[]
+  corridas        Corrida[]
+  documentos      Documento[]
+  penalizacoes    Penalizacao[]
+  financeiro      Financeiro[]
+}
+
+model Viatura {
+  id              String         @id @default(uuid())
+  matricula       String         @unique
+  marca           String
+  modelo          String
+  ano             Int
+  motor           String?
+  chassi          String?
+  estado          EstadoViatura  @default(PARQUEADO)
+  proprietarioId  String
+  proprietario    Proprietario   @relation(fields: [proprietarioId], references: [id])
+  motoristaId     String?
+  motorista       Motorista?     @relation("MotoristaViatura", fields: [motoristaId], references: [id])
+  
+  latitudeSim     Float?         // Simulador GPS
+  longitudeSim    Float?         // Simulador GPS
+  velocidadeSim   Float?         // Simulador GPS
+  dataCadastro    DateTime       @default(now())
+
+  corridas        Corrida[]
+  manutencoes     Manutencao[]
+  documentos      Documento[]
+  gpsLogs         GpsLog[]
+  escalas         Escala[]
+}
+
+model Corrida {
+  id             String        @id @default(uuid())
+  clienteId      String
+  cliente        Usuario       @relation("ClienteCorridas", fields: [clienteId], references: [id])
+  motoristaId    String?
+  motorista      Motorista?    @relation(fields: [motoristaId], references: [id])
+  viaturaId      String?
+  viatura        Viatura?      @relation(fields: [viaturaId], references: [id])
+  
+  origem         String
+  destino        String
+  origemLat      Float
+  origemLng      Float
+  destinoLat     Float
+  destinoLng     Float
+  
+  status         StatusCorrida @default(SOLICITADA)
+  valor          Float         @default(0.0)
+  distanciaKm    Float         @default(0.0)
+  tempoMin       Int           @default(0)
+  
+  classificacao  Int?          // 1 a 5 estrelas do cliente
+  comentarioCli  String?
+  
+  dataInicio     DateTime?
+  dataFim        DateTime?
+  dataCriacao    DateTime      @default(now())
+
+  financeiro     Financeiro[]
+}
+
+model Financeiro {
+  id             String         @id @default(uuid())
+  tipo           TipoTransacao
+  categoria      String         // ex: "CORRIDA", "MANUTENCAO", "TAXA_COOPERATIVA", "PROPRIETARIO_PAYOUT"
+  descricao      String
+  valor          Float
+  data           DateTime       @default(now())
+  
+  proprietarioId String?
+  proprietario   Proprietario?  @relation(fields: [proprietarioId], references: [id])
+  motoristaId    String?
+  motorista      Motorista?     @relation(fields: [motoristaId], references: [id])
+  corridaId      String?
+  corrida        Corrida?       @relation(fields: [corridaId], references: [id])
+}
+
+model Manutencao {
+  id             String           @id @default(uuid())
+  viaturaId      String
+  viatura        Viatura          @relation(fields: [viaturaId], references: [id])
+  descricao      String
+  pecasSubstitu  String?
+  custo          Float            @default(0.0)
+  oficina        String
+  status         StatusManutencao @default(AGENDADA)
+  dataAgendada   DateTime
+  dataConclusao  DateTime?
+  dataCriacao    DateTime         @default(now())
+}
+
+model Documento {
+  id             String        @id @default(uuid())
+  tipo           TipoDocumento
+  numero         String
+  validade       DateTime
+  arquivoUrl     String?
+  alertaAtivo    Boolean       @default(true)
+  
+  proprietarioId String?
+  proprietario   Proprietario? @relation(fields: [proprietarioId], references: [id])
+  motoristaId    String?
+  motorista      Motorista?    @relation(fields: [motoristaId], references: [id])
+  viaturaId      String?
+  viatura        Viatura?      @relation(fields: [viaturaId], references: [id])
+  
+  dataCriacao    DateTime      @default(now())
+}
+
+model GpsLog {
+  id             String        @id @default(uuid())
+  viaturaId      String
+  viatura        Viatura       @relation(fields: [viaturaId], references: [id], onDelete: Cascade)
+  latitude       Float
+  longitude      Float
+  velocidade     Float         @default(0.0)
+  dataHora       DateTime      @default(now())
+}
+
+model Escala {
+  id             String        @id @default(uuid())
+  motoristaId    String
+  motorista      Motorista     @relation(fields: [motoristaId], references: [id])
+  viaturaId      String
+  viatura        Viatura       @relation(fields: [viaturaId], references: [id])
+  dataInicio     DateTime
+  dataFim        DateTime
+  ativa          Boolean       @default(true)
+}
+
+model Penalizacao {
+  id             String        @id @default(uuid())
+  motoristaId    String
+  motorista      Motorista     @relation(fields: [motoristaId], references: [id], onDelete: Cascade)
+  descricao      String
+  gravidade      String        // ex: "LEVE", "GRAVE", "CRITICA"
+  pontos         Int           @default(0)
+  dataAplicacao  DateTime      @default(now())
+  ativa          Boolean       @default(true)
+}
