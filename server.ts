@@ -66,18 +66,20 @@ function logSecurityEvent(event: string, description: string, ip: string, severi
 // MIDDLEWARES DE SEGURANÇA (HELMET & RATE-LIMIT)
 // ----------------------------------------------------
 
-// 1. Helmet to secure headers (and configure CSP to allow simulated map SVGs & inline scripts from Vite)
+// 1. Helmet to secure headers (and configure CSP to allow iframe embedding)
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      defaultSrc: ["*"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "blob:", "https://images.unsplash.com", "https://ais-pre-fy5vsr36bb4ccwui6ybif7-577353986422.europe-west1.run.app", "https://ais-dev-fy5vsr36bb4ccwui6ybif7-577353986422.europe-west1.run.app"],
-      connectSrc: ["'self'", "ws:", "wss:", "https://ais-pre-fy5vsr36bb4ccwui6ybif7-577353986422.europe-west1.run.app", "https://ais-dev-fy5vsr36bb4ccwui6ybif7-577353986422.europe-west1.run.app"]
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      connectSrc: ["'self'", "ws:", "wss:", "http:", "https:"],
+      frameAncestors: ["*"],
     }
   },
+  frameguard: false,
   crossOriginEmbedderPolicy: false
 }));
 

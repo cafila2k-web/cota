@@ -45,7 +45,7 @@ O projeto utiliza um design orientado a domínios (DDD) com separação modular 
 - **Socket.IO** para despacho instantâneo de viagens e GPS Logs.
 - **Redis** para cache de sessões e controle de filas de despacho.
 
-### Roteamento e Mapas (100% Google-Free):
+### Roteamento e Mapas:
 - **OpenStreetMap** (Mapas base de Luanda, Angola).
 - **MapLibre GL JS** para renderização vetorial no Canvas.
 - **Nominatim** para pesquisa e preenchimento automático de endereços de origem e destino.

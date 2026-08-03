@@ -1,6 +1,6 @@
 {
   "name": "COTA ERP",
   "description": "ERP completo para gestão de cooperativa de táxis (Frota, Proprietários, Motoristas, Corridas, Financeiro e Manutenção).",
-  "requestFramePermissions": ["geolocation"],
+  "requestFramePermissions": ["geolocation", "camera", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
