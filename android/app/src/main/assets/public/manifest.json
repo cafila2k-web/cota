@@ -1,0 +1,17 @@
+{
+  "short_name": "COTA ERP",
+  "name": "COTA ERP - Gestão de Táxis JK",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./",
+  "display": "standalone",
+  "theme_color": "#10b981",
+  "background_color": "#020617",
+  "orientation": "portrait"
+}

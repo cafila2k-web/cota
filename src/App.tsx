@@ -3,17 +3,13 @@
 // Master Full-Stack React Orchestrator
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from './config/api';
 import { RefreshCw, Smartphone, Monitor, Sun, Moon } from 'lucide-react';
 
 import { Proprietario, Motorista, Viatura, Turno, Financeiro, Manutencao, Documento, Penalizacao, NotificacaoAlerta } from './types';
 import AdminPortal from './components/AdminPortal';
 import MotoristaPortal from './components/MotoristaPortal';
 import ProprietarioPortal from './components/ProprietarioPortal';
-
-// Configure API base URL for mobile Capacitor / Web deployment
-const API_URL = import.meta.env.VITE_API_URL || '/api';
-axios.defaults.baseURL = API_URL;
 
 export default function App() {
   // Navigation / Swapping between simulated devices/portals

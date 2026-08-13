@@ -3,7 +3,7 @@
 // High-fidelity Motorista PWA Dashboard (Shift & Daily Meta Tracker)
 
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from '../config/api';
 import {
   Power,
   MapPin,
