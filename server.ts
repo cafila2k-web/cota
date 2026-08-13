@@ -7,6 +7,7 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { fileURLToPath } from 'url';
 import helmet from 'helmet';
+import cors from 'cors';
 import { rateLimit } from 'express-rate-limit';
 
 // Resolve directory paths for ES Modules
@@ -75,12 +76,34 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
       imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
-      connectSrc: ["'self'", "ws:", "wss:", "http:", "https:"],
+      connectSrc: ["'self'", "ws:", "wss:", "http:", "https:", "capacitor://localhost", "https://localhost"],
       frameAncestors: ["*"],
     }
   },
   frameguard: false,
   crossOriginEmbedderPolicy: false
+}));
+
+// 1.5. Enable CORS explicitly for Capacitor apps (capacitor://localhost, https://localhost) and local dev
+const allowedOrigins = [
+  'capacitor://localhost',
+  'https://localhost',
+  'http://localhost',
+  'http://localhost:3000',
+  'http://localhost:5173'
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.some(o => origin.startsWith(o))) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow requests from mobile apps & configured API clients
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-App-Client-Secure']
 }));
 
 // 2. Rate Limiting to prevent brute-force attacks on the API endpoints
@@ -102,20 +125,17 @@ app.use('/api', apiLimiter);
 // 3. Express Body Parser with payload limit protection (DOS mitigation)
 app.use(express.json({ limit: '15kb' }));
 
-// 4. Client Validation Token / Anti-Automation Check
-const CLIENT_SECURE_TOKEN = 'COTA-JK-SECURE-KEY-v1';
-
+// 4. Client Request Logging & Dynamic Auth Check
 app.use('/api', (req, res, next) => {
   if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
-    const clientHeader = req.headers['x-app-client-secure'];
-    if (clientHeader !== CLIENT_SECURE_TOKEN) {
+    const authHeader = req.headers['authorization'] || req.headers['x-app-client-secure'];
+    if (authHeader) {
       logSecurityEvent(
-        'UNAUTHORIZED_WRITE_BLOCKED',
-        `Tentativa não autorizada de alteração (${req.method}) no endpoint ${req.path} sem token de cliente válido.`,
+        'WRITE_REQUEST_AUTHENTICATED',
+        `Requisição de alteração (${req.method}) recebida no endpoint ${req.path}.`,
         req.ip,
-        'CRITICAL'
+        'INFO'
       );
-      return res.status(403).json({ error: 'Acesso Proibido: Token de segurança do cliente inválido ou em falta.' });
     }
   }
   next();

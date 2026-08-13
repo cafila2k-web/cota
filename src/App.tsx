@@ -11,8 +11,9 @@ import AdminPortal from './components/AdminPortal';
 import MotoristaPortal from './components/MotoristaPortal';
 import ProprietarioPortal from './components/ProprietarioPortal';
 
-// Security Anti-Automation Token configuration
-axios.defaults.headers.common['X-App-Client-Secure'] = 'COTA-JK-SECURE-KEY-v1';
+// Configure API base URL for mobile Capacitor / Web deployment
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+axios.defaults.baseURL = API_URL;
 
 export default function App() {
   // Navigation / Swapping between simulated devices/portals
@@ -40,16 +41,16 @@ export default function App() {
       const [
         resProps, resMots, resVias, resShifts, resNotifs, resFin, resMaints, resDocs, resPens, resSecLogs
       ] = await Promise.all([
-        axios.get('/api/proprietarios'),
-        axios.get('/api/motoristas'),
-        axios.get('/api/viaturas'),
-        axios.get('/api/turnos'),
-        axios.get('/api/notificacoes'),
-        axios.get('/api/financeiro'),
-        axios.get('/api/manutencoes'),
-        axios.get('/api/documentos'),
-        axios.get('/api/penalizacoes'),
-        axios.get('/api/security/audit-trail')
+        axios.get('/proprietarios'),
+        axios.get('/motoristas'),
+        axios.get('/viaturas'),
+        axios.get('/turnos'),
+        axios.get('/notificacoes'),
+        axios.get('/financeiro'),
+        axios.get('/manutencoes'),
+        axios.get('/documentos'),
+        axios.get('/penalizacoes'),
+        axios.get('/security/audit-trail')
       ]);
 
       setProprietarios(resProps.data);
@@ -84,7 +85,7 @@ export default function App() {
 
   const handleAddProprietario = async (formData: any) => {
     try {
-      await axios.post('/api/proprietarios', formData);
+      await axios.post('/proprietarios', formData);
       fetchCooperativeState();
     } catch {
       alert('Erro ao registrar proprietário no backend.');
@@ -93,7 +94,7 @@ export default function App() {
 
   const handleAddMotorista = async (formData: any) => {
     try {
-      await axios.post('/api/motoristas', formData);
+      await axios.post('/motoristas', formData);
       fetchCooperativeState();
     } catch {
       alert('Erro ao registrar motorista no backend.');
@@ -102,7 +103,7 @@ export default function App() {
 
   const handleAddViatura = async (formData: any) => {
     try {
-      await axios.post('/api/viaturas', formData);
+      await axios.post('/viaturas', formData);
       fetchCooperativeState();
     } catch {
       alert('Erro ao registrar viatura no backend.');
@@ -111,7 +112,7 @@ export default function App() {
 
   const handleAddFinanceiro = async (formData: any) => {
     try {
-      await axios.post('/api/financeiro', formData);
+      await axios.post('/financeiro', formData);
       fetchCooperativeState();
     } catch {
       alert('Erro ao lançar transação financeira.');
@@ -120,7 +121,7 @@ export default function App() {
 
   const handleAddManutencao = async (formData: any) => {
     try {
-      await axios.post('/api/manutencoes', formData);
+      await axios.post('/manutencoes', formData);
       fetchCooperativeState();
     } catch {
       alert('Erro ao agendar ordem de manutenção.');
@@ -129,7 +130,7 @@ export default function App() {
 
   const handleConcluirManutencao = async (maintId: string) => {
     try {
-      await axios.post(`/api/manutencoes/${maintId}/concluir`);
+      await axios.post(`/manutencoes/${maintId}/concluir`);
       fetchCooperativeState();
     } catch {
       alert('Erro ao concluir ordem de serviço.');
@@ -139,7 +140,7 @@ export default function App() {
   const handleAddPenalizacao = async (formData: any) => {
     try {
       const driver = motoristas.find(m => m.id === formData.motoristaId);
-      await axios.post('/api/penalizacoes', {
+      await axios.post('/penalizacoes', {
         ...formData,
         motoristaNome: driver ? driver.usuario.nome : 'Desconhecido'
       });
@@ -151,7 +152,7 @@ export default function App() {
 
   const handleClearAlerts = async () => {
     try {
-      await axios.post('/api/notificacoes/ler');
+      await axios.post('/notificacoes/ler');
       fetchCooperativeState();
     } catch {
       alert('Erro ao limpar notificações.');

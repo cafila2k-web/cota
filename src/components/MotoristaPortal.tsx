@@ -95,7 +95,7 @@ export default function MotoristaPortal({
       return;
     }
     try {
-      await axios.post('/api/turnos/iniciar', {
+      await axios.post('/turnos/iniciar', {
         motoristaId: motorista.id,
         viaturaId: selectedViaturaId,
         kmInicial,
@@ -116,7 +116,7 @@ export default function MotoristaPortal({
       return;
     }
     try {
-      await axios.post(`/api/turnos/${activeShift.id}/incidente`, {
+      await axios.post(`/turnos/${activeShift.id}/incidente`, {
         tipo: activeIncidentType,
         descricao: incidentDesc,
         latitude: assignedViatura?.latitudeSim || -8.8368,
@@ -137,7 +137,7 @@ export default function MotoristaPortal({
     e.preventDefault();
     if (!activeShift || !quickMessage.trim()) return;
     try {
-      await axios.post(`/api/turnos/${activeShift.id}/comunicar`, {
+      await axios.post(`/turnos/${activeShift.id}/comunicar`, {
         mensagem: quickMessage
       });
       setQuickMessage('');
@@ -160,7 +160,7 @@ export default function MotoristaPortal({
     }
 
     try {
-      const res = await axios.post(`/api/turnos/${activeShift.id}/encerrar`, {
+      const res = await axios.post(`/turnos/${activeShift.id}/encerrar`, {
         kmFinal: parseInt(kmFinal),
         horaFim: new Date().toLocaleTimeString().substring(0, 5),
         valorArrecadado: parseFloat(valorArrecadado),
